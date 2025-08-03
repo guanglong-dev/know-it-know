@@ -13,6 +13,4 @@ wheels/
 .env
 
 # Logs directory - ignore contents but keep directory
-logs/*
-!logs/
-logs/.gitkeep
+logs/*.log
