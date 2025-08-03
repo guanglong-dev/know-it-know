@@ -1,0 +1,18 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# .env files
+.env
+
+# Logs directory - ignore contents but keep directory
+logs/*
+!logs/
+logs/.gitkeep
