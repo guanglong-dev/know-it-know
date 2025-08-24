@@ -67,6 +67,9 @@ REDIS_DB=0
 
 # 应用配置
 FLASK_PORT=8000
+
+# 数据库（可选，MySQL 示例；未配置则使用 sqlite:///app.db）
+DATABASE_URL=mysql+pymysql://user:pass@host:3306/db?charset=utf8mb4
 ```
 
 ## 运行应用
@@ -105,3 +108,33 @@ def process_message(message: dict):
 
 ## 许可证
 [MIT](LICENSE)
+
+## 数据库迁移
+
+1. 配置数据库连接（MySQL 示例）到 `.env`：
+   ```ini
+   DATABASE_URL=mysql+pymysql://user:pass@host:3306/db?charset=utf8mb4
+   ```
+   未配置时默认使用 `sqlite:///app.db`。
+
+2. 初始化迁移目录：
+   ```bash
+   flask --app main:create_app db init
+   ```
+
+3. 生成迁移文件（会自动对比模型变更）：
+   ```bash
+   flask --app main:create_app db migrate -m "init"
+   ```
+
+4. 应用迁移到数据库：
+   ```bash
+   flask --app main:create_app db upgrade
+   ```
+
+5. 回滚一步（如需）：
+   ```bash
+   flask --app main:create_app db downgrade -1
+   ```
+
+在 `models.py` 中定义/修改你的模型后，重复步骤 3-4 以同步表结构。

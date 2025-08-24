@@ -16,7 +16,7 @@ load_dotenv()
 # 配置日志
 log_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
 os.makedirs(log_dir, exist_ok=True)
-log_filename = os.path.join(log_dir, f'{datetime.now().strftime('%Y-%m-%d')}.log')
+log_filename = os.path.join(log_dir, f"{datetime.now().strftime('%Y-%m-%d')}.log")
 
 logging.basicConfig(
     level=logging.INFO,
@@ -30,6 +30,9 @@ logger = logging.getLogger('feishu-bot')
 
 # 初始化Flask应用
 app = Flask(__name__)
+
+# 初始化数据库扩展
+from extensions import db, migrate
 
 # 初始化Redis连接
 redis_client = redis.Redis(
@@ -171,10 +174,34 @@ def send_feishu_message(receive_id_type: str, receive_id: str, msg_type: str, co
         logger.error(f'Error sending message: {str(e)}')
         return False, str(e)
 
+def create_app():
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
+        'DATABASE_URL',
+        'sqlite:///app.db'
+    )
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config.setdefault('SQLALCHEMY_ENGINE_OPTIONS', {'pool_pre_ping': True})
+
+    db.init_app(app)
+
+    # 确保模型被导入，使迁移能够发现
+    try:
+        import models  # noqa: F401
+    except Exception as e:
+        logger.warning(f'Failed to import models: {e}')
+
+    # SQLite 迁移友好：启用批量渲染以兼容 ALTER TABLE 等操作
+    migrate.init_app(app, db, render_as_batch=True)
+
+    return app
+
 def main():
+    # 初始化应用（数据库与迁移）
+    create_app()
+
     # 启动消息消费者
     message_consumer()
-    
+
     # 启动Flask应用
     port = int(os.getenv('FLASK_PORT', 8000))
     logger.info(f'Starting Flask server on port {port}')
